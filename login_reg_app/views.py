@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import User
+from django.contrib import messages
 import bcrypt
 
 
@@ -9,6 +10,13 @@ def index(request):
 
 
 def register_user(request):
+
+    errors = User.objects.basic_validator(request.POST)
+
+    if len(errors) > 0:
+        for key, val in errors.items():
+            messages.error(request, val)
+        return redirect("/")
 
     password = request.POST["password"]
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -39,3 +47,8 @@ def success_page(request, user_id):
         "user": User.objects.get(id=user_id),
     }
     return render(request, "success.html", context)
+
+
+def logout_user(request):
+    del request.session["userid"]
+    return redirect("/")
